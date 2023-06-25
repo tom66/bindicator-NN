@@ -4,9 +4,7 @@ NO_LED = True
 
 from ics import Calendar
 from arrow import now as arr_now
-import requests
-import time
-import random
+import requests, json, time, random
 
 try:
 	from rpi_ws281x import PixelStrip, Color
@@ -20,11 +18,11 @@ import math
 print("Starting application...")
 
 led_gamma = [
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
-    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
-    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
-    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
+	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
+	1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
+	2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
+	5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
    10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
    17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
    25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
@@ -37,6 +35,8 @@ led_gamma = [
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255
 ]
+
+wkdays = [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
 
 STATE_IDLE = 0
 STATE_NO_INTERNET = 1
@@ -56,14 +56,14 @@ anim_frame = 0
 cal_url = open("url.txt", "r").readlines()[0].strip()
 
 # LED strip configuration:
-LED_COUNT = 24        # Number of LED pixels.
-LED_PIN = 18          # GPIO pin connected to the pixels (18 uses PWM!).
-# LED_PIN = 10        # GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
+LED_COUNT = 24		# Number of LED pixels.
+LED_PIN = 18		  # GPIO pin connected to the pixels (18 uses PWM!).
+# LED_PIN = 10		# GPIO pin connected to the pixels (10 uses SPI /dev/spidev0.0).
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA = 10          # DMA channel to use for generating signal (try 10)
+LED_DMA = 10		  # DMA channel to use for generating signal (try 10)
 LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
-LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+LED_INVERT = False	# True to invert the signal (when using NPN transistor level shift)
+LED_CHANNEL = 0	   # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
 led_strip = None
 
@@ -81,8 +81,17 @@ def led_init():
 		led_strip.begin()
 
 def get_schedule():
-    print(requests.get(cal_url + ("%d" % random.randint(1, 1000))))
-    return None
+	try:
+		r = requests.get(cal_url + ("%d" % random.randint(1, 1000)), timeout=5)
+	except requests.exceptions:
+		print("Timed out requesting data")
+		return None
+	
+	if r.status_code != 200:
+		print("Request error (resp %d)" % r.status_code)
+		return None
+		
+	return r.text
 
 def find_nearest_event(c):
 	soon_time = None
@@ -124,7 +133,7 @@ def led_strip_gamma(n, r, g, b):
 	global led_strip
 
 	if not NO_LED:
-        	led_strip.setPixelColorRGB(n, int(led_gamma[r] * SCALE_RED), int(led_gamma[g] * SCALE_GRN), int(led_gamma[b] * SCALE_BLU))
+			led_strip.setPixelColorRGB(n, int(led_gamma[r] * SCALE_RED), int(led_gamma[g] * SCALE_GRN), int(led_gamma[b] * SCALE_BLU))
 
 def switch_bin_state(event):
 	global state
@@ -216,11 +225,65 @@ def main_loop_iter():
 	if state == STATE_NO_INTERNET:
 		check_rate = 15
 
-	if 1: # state == STATE_NO_INTERNET or state == STATE_IDLE:
+	if state == STATE_NO_INTERNET or state == STATE_IDLE:
 		if (time.time() - last_calendar_bin_update) > check_rate:
 			print("Trying to update schedule info...")
 
 		sched = get_schedule()
+		if sched == None:
+			state = STATE_NO_INTERNET
+		else:
+			# try to parse the schedule - it's a JSON
+			try:
+				j = json.loads(sched)
+				# Types of schedule.  "A" has EVEN weeks with refuse, ODD weeks with recycling;  "B" has the opposite.
+				# I live in a "B" area, so this is just based on analysis of public JS.
+				week_of_year = datetime.datetime.today().isocalendar()[1]
+				weekday = wkdays[datetime.datetime.today().isoweekday()]
+				sch = j["schedule"][0]
+				sch_weekday = j["day"].upper()
+                
+                print("JSON: %r" % j)
+                print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
+                print("weekday: %d" % weekday)
+                print("schedule: %d" % sch)
+                print("scheduled_weekday: %d" % sch_weekday)
+				
+				if week_of_year % 2 == 0:
+					# even week of the year
+					if sch == 'A':
+						if weekday == sch_weekday:
+							print("Now STATE_GENERAL_WASTE")
+							state = STATE_GENERAL_WASTE
+						else:
+							print("Now STATE_IDLE")
+							state = STATE_IDLE
+					if sch == 'B':
+						if weekday == sch_weekday:
+							print("Now STATE_RECYCLING")
+							state = STATE_RECYCLING
+						else:
+							print("Now STATE_IDLE")
+							state = STATE_IDLE
+				else:
+					# even week of the year
+					if sch == 'A':
+						if weekday == sch_weekday:
+							print("Now STATE_RECYCLING")
+							state = STATE_RECYCLING
+						else:
+							print("Now STATE_IDLE")
+							state = STATE_IDLE
+					if sch == 'B':
+						if weekday == sch_weekday:
+							print("Now STATE_GENERAL_WASTE")
+							state = STATE_GENERAL_WASTE
+						else:
+							print("Now STATE_IDLE")
+							state = STATE_IDLE
+			except:
+				print("JSON parsing error, connection problem, assuming internet issue")
+				state = STATE_NO_INTERNET
 
 		last_calendar_bin_update = time.time()
 	else:
