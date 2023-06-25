@@ -234,7 +234,7 @@ def main_loop_iter():
         else:
             # try to parse the schedule - it's a JSON string
             try:
-                print("Pre-JSON text: %s", sched)
+                print("Pre-JSON text: %s" % sched)
                 
                 j = json.loads(sched)
                 # Types of schedule.  "A" has EVEN weeks with refuse, ODD weeks with recycling;  "B" has the opposite.
@@ -282,8 +282,8 @@ def main_loop_iter():
                         else:
                             print("Now STATE_IDLE")
                             state = STATE_IDLE
-            except:
-                print("JSON parsing error, connection problem, assuming internet issue")
+            except Exception as e:
+                print("JSON parsing error, connection problem, assuming internet issue: %r", e)
                 state = STATE_NO_INTERNET
 
         last_calendar_bin_update = time.time()
