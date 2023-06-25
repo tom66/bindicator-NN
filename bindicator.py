@@ -3,7 +3,7 @@ print("Starting application imports...")
 NO_LED = True
 
 from arrow import now as arr_now
-import requests, json, time, random
+import requests, json, time, random, datetime
 
 try:
     from rpi_ws281x import PixelStrip, Color
@@ -283,7 +283,7 @@ def main_loop_iter():
                             print("Now STATE_IDLE")
                             state = STATE_IDLE
             except Exception as e:
-                print("JSON parsing error, connection problem, assuming internet issue: %r", e)
+                print("JSON parsing error, connection problem, assuming internet issue: %r" % e)
                 state = STATE_NO_INTERNET
 
         last_calendar_bin_update = time.time()
