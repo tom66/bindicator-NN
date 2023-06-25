@@ -228,73 +228,76 @@ def main_loop_iter():
         if (time.time() - last_calendar_bin_update) > check_rate:
             print("Trying to update schedule info...")
 
-        sched = get_schedule()
-        if sched == None:
-            state = STATE_NO_INTERNET
-        else:
-            # try to parse the schedule - it's a JSON string
-            try:
-                print("Pre-JSON text: %s" % sched)
-                
-                j = json.loads(sched)
-                print("JSON: %r" % j)
-                
-                # Types of schedule.  "A" has EVEN weeks with refuse, ODD weeks with recycling;  "B" has the opposite.
-                # I live in a "B" area, so this is just based on analysis of public JS.
-                week_of_year = datetime.datetime.today().isocalendar()[1]
-                print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
-                
-                weekday = wkdays[datetime.datetime.today().isoweekday() - 1]
-                print("weekday: %s" % weekday)
-                
-                sch = j["schedule"][0]
-                print("schedule: %s" % sch)
-                
-                sch_weekday = j["day"].upper()
-                print("scheduled_weekday: %s" % sch_weekday)
-                
-                if week_of_year % 2 == 0:
-                    # even week of the year
-                    if sch == 'A':
-                        if weekday == sch_weekday:
-                            print("Now STATE_GENERAL_WASTE")
-                            state = STATE_GENERAL_WASTE
-                        else:
-                            print("Now STATE_IDLE")
-                            state = STATE_IDLE
-                    if sch == 'B':
-                        if weekday == sch_weekday:
-                            print("Now STATE_RECYCLING")
-                            state = STATE_RECYCLING
-                        else:
-                            print("Now STATE_IDLE")
-                            state = STATE_IDLE
-                else:
-                    # even week of the year
-                    if sch == 'A':
-                        if weekday == sch_weekday:
-                            print("Now STATE_RECYCLING")
-                            state = STATE_RECYCLING
-                        else:
-                            print("Now STATE_IDLE")
-                            state = STATE_IDLE
-                    if sch == 'B':
-                        if weekday == sch_weekday:
-                            print("Now STATE_GENERAL_WASTE")
-                            state = STATE_GENERAL_WASTE
-                        else:
-                            print("Now STATE_IDLE")
-                            state = STATE_IDLE
-            except Exception as e:
-                print("JSON parsing error, connection problem, assuming internet issue: %r" % e)
+            sched = get_schedule()
+            if sched == None:
                 state = STATE_NO_INTERNET
+            else:
+                # try to parse the schedule - it's a JSON string
+                try:
+                    print("Pre-JSON text: %s" % sched)
+                    
+                    j = json.loads(sched)
+                    print("JSON: %r" % j)
+                    
+                    # Types of schedule.  "A" has EVEN weeks with refuse, ODD weeks with recycling;  "B" has the opposite.
+                    # I live in a "B" area, so this is just based on analysis of public JS.
+                    week_of_year = datetime.datetime.today().isocalendar()[1]
+                    print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
+                    
+                    weekday = wkdays[datetime.datetime.today().isoweekday() - 1]
+                    print("weekday: %s" % weekday)
+                    
+                    next_weekday = wkdays[(datetime.datetime.today().isoweekday()) % 7]
+                    print("next_weekday: %s" % next_weekday)
+                    
+                    sch = j["schedule"][0]
+                    print("schedule: %s" % sch)
+                    
+                    sch_weekday = j["day"].upper()
+                    print("scheduled_weekday: %s" % sch_weekday)
+                    
+                    if week_of_year % 2 == 0:
+                        # even week of the year
+                        if sch == 'A':
+                            if weekday == sch_weekday:
+                                print("Now STATE_GENERAL_WASTE")
+                                state = STATE_GENERAL_WASTE
+                            else:
+                                print("Now STATE_IDLE")
+                                state = STATE_IDLE
+                        if sch == 'B':
+                            if weekday == sch_weekday:
+                                print("Now STATE_RECYCLING")
+                                state = STATE_RECYCLING
+                            else:
+                                print("Now STATE_IDLE")
+                                state = STATE_IDLE
+                    else:
+                        # even week of the year
+                        if sch == 'A':
+                            if weekday == sch_weekday:
+                                print("Now STATE_RECYCLING")
+                                state = STATE_RECYCLING
+                            else:
+                                print("Now STATE_IDLE")
+                                state = STATE_IDLE
+                        if sch == 'B':
+                            if weekday == sch_weekday:
+                                print("Now STATE_GENERAL_WASTE")
+                                state = STATE_GENERAL_WASTE
+                            else:
+                                print("Now STATE_IDLE")
+                                state = STATE_IDLE
+                except Exception as e:
+                    print("JSON parsing error, connection problem, assuming internet issue: %r" % e)
+                    state = STATE_NO_INTERNET
 
-        last_calendar_bin_update = time.time()
+            last_calendar_bin_update = time.time()
     else:
         # If it's been more than 24hr since the bin light switched over then turn it off
         if (last_bin_light_switch_time - time.time()) > 86400:
             state = STATE_IDLE
-    
+
 if __name__ == "__main__":
     tl = 0
 
