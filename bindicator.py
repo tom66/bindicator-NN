@@ -227,6 +227,7 @@ def main_loop_iter():
     if state == STATE_NO_INTERNET or state == STATE_IDLE:
         if (time.time() - last_calendar_bin_update) > check_rate:
             print("Trying to update schedule info...")
+            print("The current time is: %r" % datetime.datetime.today())
 
             sched = get_schedule()
             if sched == None:
