@@ -237,17 +237,20 @@ def main_loop_iter():
                 print("Pre-JSON text: %s" % sched)
                 
                 j = json.loads(sched)
+                print("JSON: %r" % j)
+                
                 # Types of schedule.  "A" has EVEN weeks with refuse, ODD weeks with recycling;  "B" has the opposite.
                 # I live in a "B" area, so this is just based on analysis of public JS.
                 week_of_year = datetime.datetime.today().isocalendar()[1]
-                weekday = wkdays[datetime.datetime.today().isoweekday()]
-                sch = j["schedule"][0]
-                sch_weekday = j["day"].upper()
-                
-                print("JSON: %r" % j)
                 print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
+                
+                weekday = wkdays[datetime.datetime.today().isoweekday() - 1]
                 print("weekday: %d" % weekday)
+                
+                sch = j["schedule"][0]
                 print("schedule: %d" % sch)
+                
+                sch_weekday = j["day"].upper()
                 print("scheduled_weekday: %d" % sch_weekday)
                 
                 if week_of_year % 2 == 0:
