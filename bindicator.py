@@ -245,13 +245,13 @@ def main_loop_iter():
                 print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
                 
                 weekday = wkdays[datetime.datetime.today().isoweekday() - 1]
-                print("weekday: %d" % weekday)
+                print("weekday: %s" % weekday)
                 
                 sch = j["schedule"][0]
-                print("schedule: %d" % sch)
+                print("schedule: %s" % sch)
                 
                 sch_weekday = j["day"].upper()
-                print("scheduled_weekday: %d" % sch_weekday)
+                print("scheduled_weekday: %s" % sch_weekday)
                 
                 if week_of_year % 2 == 0:
                     # even week of the year
