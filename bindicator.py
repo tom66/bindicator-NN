@@ -81,7 +81,7 @@ def led_init():
 		led_strip.begin()
 
 def get_schedule():
-	print requests.get(cal_url + ("%d" % random.randint(1, 1000)))
+    print(requests.get(cal_url + ("%d" % random.randint(1, 1000))))
     return None
 
 def find_nearest_event(c):
@@ -220,21 +220,9 @@ def main_loop_iter():
 		if (time.time() - last_calendar_bin_update) > check_rate:
 			print("Trying to update schedule info...")
 
-            sched = get_schedule()
-            
-            """
-			try:
-				cal = get_calendar()
-			except:
-				print("No internet!")
-				state = STATE_NO_INTERNET
-			else:
-				event = find_nearest_event(cal)
-				switch_bin_state(event)
-				#last_bin_light_switch_time = time.time()
-            """
-            
-			last_calendar_bin_update = time.time()
+		sched = get_schedule()
+
+		last_calendar_bin_update = time.time()
 	else:
 		# If it's been more than 24hr since the bin light switched over then turn it off
 		if (last_bin_light_switch_time - time.time()) > 86400:
