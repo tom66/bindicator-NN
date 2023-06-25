@@ -242,12 +242,12 @@ def main_loop_iter():
 				weekday = wkdays[datetime.datetime.today().isoweekday()]
 				sch = j["schedule"][0]
 				sch_weekday = j["day"].upper()
-                
-                print("JSON: %r" % j)
-                print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
-                print("weekday: %d" % weekday)
-                print("schedule: %d" % sch)
-                print("scheduled_weekday: %d" % sch_weekday)
+				
+				print("JSON: %r" % j)
+				print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
+				print("weekday: %d" % weekday)
+				print("schedule: %d" % sch)
+				print("scheduled_weekday: %d" % sch_weekday)
 				
 				if week_of_year % 2 == 0:
 					# even week of the year
