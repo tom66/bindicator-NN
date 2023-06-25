@@ -6,6 +6,7 @@ from ics import Calendar
 from arrow import now as arr_now
 import requests
 import time
+import random
 
 try:
 	from rpi_ws281x import PixelStrip, Color
@@ -79,8 +80,9 @@ def led_init():
 		led_strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 		led_strip.begin()
 
-def get_calendar():
-	return Calendar(requests.get(cal_url).text)
+def get_schedule():
+	print requests.get(cal_url + ("%d" % random.randint(1, 1000)))
+    return None
 
 def find_nearest_event(c):
 	soon_time = None
@@ -216,8 +218,11 @@ def main_loop_iter():
 
 	if 1: # state == STATE_NO_INTERNET or state == STATE_IDLE:
 		if (time.time() - last_calendar_bin_update) > check_rate:
-			print("Trying to update calendar...")
+			print("Trying to update schedule info...")
 
+            sched = get_schedule()
+            
+            """
 			try:
 				cal = get_calendar()
 			except:
@@ -227,7 +232,8 @@ def main_loop_iter():
 				event = find_nearest_event(cal)
 				switch_bin_state(event)
 				#last_bin_light_switch_time = time.time()
-
+            """
+            
 			last_calendar_bin_update = time.time()
 	else:
 		# If it's been more than 24hr since the bin light switched over then turn it off
