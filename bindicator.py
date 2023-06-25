@@ -245,28 +245,28 @@ def main_loop_iter():
                     print("week_of_year: %d (is_even %d)" % (week_of_year, (week_of_year % 2 == 0)))
                     
                     weekday = wkdays[datetime.datetime.today().isoweekday() - 1]
-                    print("weekday: %s" % weekday)
+                    print("weekday: '%s'" % weekday)
                     
                     next_weekday = wkdays[(datetime.datetime.today().isoweekday()) % 7]
-                    print("next_weekday: %s" % next_weekday)
+                    print("next_weekday: '%s'" % next_weekday)
                     
                     sch = j["schedule"][0]
                     print("schedule: %s" % sch)
                     
-                    sch_weekday = j["day"].upper()
-                    print("scheduled_weekday: %s" % sch_weekday)
+                    sch_weekday = j["day"].upper().strip()
+                    print("scheduled_weekday: '%s'" % sch_weekday)
                     
                     if week_of_year % 2 == 0:
                         # even week of the year
                         if sch == 'A':
-                            if weekday == sch_weekday:
+                            if next_weekday == sch_weekday:
                                 print("Now STATE_GENERAL_WASTE")
                                 state = STATE_GENERAL_WASTE
                             else:
                                 print("Now STATE_IDLE")
                                 state = STATE_IDLE
                         if sch == 'B':
-                            if weekday == sch_weekday:
+                            if next_weekday == sch_weekday:
                                 print("Now STATE_RECYCLING")
                                 state = STATE_RECYCLING
                             else:
@@ -275,14 +275,14 @@ def main_loop_iter():
                     else:
                         # even week of the year
                         if sch == 'A':
-                            if weekday == sch_weekday:
+                            if next_weekday == sch_weekday:
                                 print("Now STATE_RECYCLING")
                                 state = STATE_RECYCLING
                             else:
                                 print("Now STATE_IDLE")
                                 state = STATE_IDLE
                         if sch == 'B':
-                            if weekday == sch_weekday:
+                            if next_weekday == sch_weekday:
                                 print("Now STATE_GENERAL_WASTE")
                                 state = STATE_GENERAL_WASTE
                             else:
